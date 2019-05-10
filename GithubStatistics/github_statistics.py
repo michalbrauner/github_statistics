@@ -12,11 +12,14 @@ class GithubStatisticsProvider(object):
 
     def get_merged_pull_requests_in_time_chart(self, title: str) -> go.Figure:
         data = self.data.dropna(subset=['merged_at'], inplace=False, axis='index')
-        data = data.set_index(['merged_at'], drop=True, verify_integrity=True)
+        data = data.set_index(pd.DatetimeIndex(data['merged_at']), drop=True, verify_integrity=True)
 
-        balances_chart = go.Scatter(
-            x=data.index,
-            y=data,
+        data_rescaled = data.resample('D')
+        number_of_pull_requests_data = data_rescaled['number'].count().dropna()
+
+        chart = go.Scatter(
+            x=number_of_pull_requests_data.index,
+            y=number_of_pull_requests_data,
             name='Date',
             mode='lines'
         )
@@ -31,6 +34,6 @@ class GithubStatisticsProvider(object):
             title=title,
         )
 
-        chart_data = [balances_chart]
+        chart_data = [chart]
 
         return go.Figure(data=chart_data, layout=layout)

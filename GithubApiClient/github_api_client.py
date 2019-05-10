@@ -1,7 +1,9 @@
 import json
+import re
 import ssl
 import urllib.request
 from http import cookiejar
+from typing import List
 
 
 class GithubApiClient(object):
@@ -20,16 +22,34 @@ class GithubApiClient(object):
         return self._token
 
     def get_pull_requests(self):
+        data_all = []
+
         url = '{}/repos/BrandEmbassy/platform-backend/pulls?state=all'.format(self.API_URL)
 
         password_manager = urllib.request.HTTPPasswordMgrWithPriorAuth()
         password_manager.add_password(None, url, self.username, self.token, is_authenticated=True)
 
         request_opener = self.create_request_opener(password_manager)
-        request = urllib.request.Request(url=url, method='GET')
-        response = request_opener.open(request)
 
-        return json.loads(response.read())
+        while True:
+            request = urllib.request.Request(url=url, method='GET')
+            response = request_opener.open(request)
+
+            links = self.parse_links(response.headers.get('Link'))
+            data_all = data_all + json.loads(response.read())
+            break
+
+        return data_all
+
+    def parse_links(self, links_from_header: str) -> dict:
+        links = {}
+
+        search_data = re.findall(r'<([^>]*)>; rel=\"([\w]+)\"', links_from_header, re.MULTILINE)
+
+        for search_data_item in search_data:
+            links[search_data_item[1]] = search_data_item[0]
+
+        return links
 
     def create_request_opener(self, password_manager: urllib.request.HTTPPasswordMgr):
         ctx = self.get_ssl_default_context()
