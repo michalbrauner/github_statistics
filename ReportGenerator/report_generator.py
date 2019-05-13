@@ -10,9 +10,8 @@ plotly.tools.set_credentials_file(username='michalbrauner', api_key='nueZsBmz2b8
 
 class ReportGenerator(object):
     @staticmethod
-    def generate(github_statistics_provider: GithubStatisticsProvider, output_directory: str, filename: str) -> None:
-        file = os.path.join(output_directory, filename)
-        file_opened = open(file, 'w')
+    def generate(github_statistics_provider: GithubStatisticsProvider, output_file: str) -> None:
+        file_opened = open(output_file, 'w')
         file_opened.write(ReportGenerator.get_html_string(github_statistics_provider))
         file_opened.close()
 

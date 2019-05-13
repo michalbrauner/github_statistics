@@ -1,6 +1,7 @@
 import json
 import re
 import ssl
+import sys
 import urllib.request
 from http import cookiejar
 from typing import List
@@ -26,18 +27,27 @@ class GithubApiClient(object):
 
         url = '{}/repos/BrandEmbassy/platform-backend/pulls?state=all'.format(self.API_URL)
 
-        password_manager = urllib.request.HTTPPasswordMgrWithPriorAuth()
-        password_manager.add_password(None, url, self.username, self.token, is_authenticated=True)
-
-        request_opener = self.create_request_opener(password_manager)
+        current_page = 1
 
         while True:
+            print('Loading page {}'.format(current_page), end='\r')
+            sys.stdout.flush()
+
+            password_manager = urllib.request.HTTPPasswordMgrWithPriorAuth()
+            password_manager.add_password(None, url, self.username, self.token, is_authenticated=True)
+
+            request_opener = self.create_request_opener(password_manager)
             request = urllib.request.Request(url=url, method='GET')
             response = request_opener.open(request)
 
             links = self.parse_links(response.headers.get('Link'))
             data_all = data_all + json.loads(response.read())
-            break
+
+            if 'next' in links:
+                url = links['next']
+                current_page = current_page + 1
+            else:
+                break
 
         return data_all
 

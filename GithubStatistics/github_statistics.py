@@ -11,17 +11,33 @@ class GithubStatisticsProvider(object):
         return self._data
 
     def get_merged_pull_requests_in_time_chart(self, title: str) -> go.Figure:
-        data = self.data.dropna(subset=['merged_at'], inplace=False, axis='index')
-        data = data.set_index(pd.DatetimeIndex(data['merged_at']), drop=True, verify_integrity=True)
+        pull_requests_by_merged_at = self.get_pull_requests_by_merged_at()
+        pull_requests_by_created_at = self.get_pull_requests_by_created_at()
 
-        data_rescaled = data.resample('D')
-        number_of_pull_requests_data = data_rescaled['number'].count().dropna()
+        data_by_merged_at_rescaled = pull_requests_by_merged_at.resample('M')
+        number_of_pull_requests_by_merged_at = data_by_merged_at_rescaled['number'].count().dropna()
 
-        chart = go.Scatter(
-            x=number_of_pull_requests_data.index,
-            y=number_of_pull_requests_data,
-            name='Date',
-            mode='lines'
+        data_by_created_at_rescaled = pull_requests_by_created_at.resample('M')
+        number_of_pull_requests_by_created_at = data_by_created_at_rescaled['number'].count().dropna()
+
+        chart_by_merged_at = go.Scatter(
+            x=number_of_pull_requests_by_merged_at.index,
+            y=number_of_pull_requests_by_merged_at,
+            name='Merged PR',
+            mode='lines',
+            line={
+                'shape': 'spline'
+            }
+        )
+
+        chart_by_created_at = go.Scatter(
+            x=number_of_pull_requests_by_created_at.index,
+            y=number_of_pull_requests_by_created_at,
+            name='Created PR',
+            mode='lines',
+            line={
+                'shape': 'spline'
+            }
         )
 
         layout = go.Layout(
@@ -34,6 +50,20 @@ class GithubStatisticsProvider(object):
             title=title,
         )
 
-        chart_data = [chart]
+        chart_data = [chart_by_merged_at, chart_by_created_at]
 
         return go.Figure(data=chart_data, layout=layout)
+
+    def get_pull_requests_by_merged_at(self):
+        pull_requests = self.data.dropna(subset=['merged_at'], inplace=False, axis='index')
+        pull_requests = pull_requests.set_index(pd.DatetimeIndex(pull_requests['merged_at']), drop=True,
+                                                verify_integrity=False)
+
+        return pull_requests
+
+    def get_pull_requests_by_created_at(self):
+        pull_requests = self.data.dropna(subset=['created_at'], inplace=False, axis='index')
+        pull_requests = pull_requests.set_index(pd.DatetimeIndex(pull_requests['created_at']), drop=True,
+                                                verify_integrity=False)
+
+        return pull_requests
