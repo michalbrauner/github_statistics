@@ -1,7 +1,9 @@
 import datetime
-import os
+import pandas as pd
 import plotly.plotly as py
 import plotly.tools
+
+from GithubStatistics.Charts.open_and_merged_pull_requests_chart_provider import OpenAndMergedPullRequestsChartProvider
 from GithubStatistics.github_statistics import GithubStatisticsProvider
 from ReportGenerator.github_statistics_to_html_printer import GithubStatisticsToHtmlPrinter
 
@@ -19,14 +21,9 @@ class ReportGenerator(object):
     def get_html_string(github_statistics_provider: GithubStatisticsProvider) -> str:
         generated_at_string = 'Generated at {}'.format(datetime.datetime.now())
 
-        merged_pull_requests_in_time_chart = github_statistics_provider.get_merged_pull_requests_in_time_chart(
-            'Merged pull requests')
-
-        merged_pull_requests_in_time_url = py.plot(merged_pull_requests_in_time_chart,
-                                                   filename='merged_pull_requests_in_time_chart',
-                                                   auto_open=False)
-
-        merged_pull_requests_in_time = GithubStatisticsToHtmlPrinter.print_chart(merged_pull_requests_in_time_url)
+        merged_pull_requests_in_time = GithubStatisticsToHtmlPrinter.print_chart(
+            ReportGenerator.create_merged_and_created_pull_requests_chart_url(github_statistics_provider.data)
+        )
 
         return '''
 <html>
@@ -43,3 +40,10 @@ class ReportGenerator(object):
     </body>
 </html>
         '''
+
+    @staticmethod
+    def create_merged_and_created_pull_requests_chart_url(data: pd.DataFrame):
+        chart_provider = OpenAndMergedPullRequestsChartProvider(data)
+        chart = chart_provider.get_chart('Created and merged pull requests')
+
+        return py.plot(chart, filename='merged_pull_requests_in_time_chart', auto_open=False)
