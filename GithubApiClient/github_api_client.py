@@ -1,9 +1,11 @@
+import asyncio
 import json
 import re
 import ssl
 import sys
 import urllib.request
 import urllib.response
+from concurrent.futures import ThreadPoolExecutor
 from http import cookiejar
 from http.client import HTTPResponse
 from typing import List
@@ -37,7 +39,14 @@ class GithubApiClient(object):
             response = self.make_request_to_github(url)
 
             links = self.parse_links(response.headers.get('Link'))
-            data_for_this_page = self.append_detailed_data_about_pull_requests(json.loads(response.read()))
+
+            data_for_this_page = []
+
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(
+                self.append_detailed_data_about_pull_requests(data_for_this_page, json.loads(response.read())))
+
             data_all = data_all + data_for_this_page
 
             if 'next' in links:
@@ -57,20 +66,30 @@ class GithubApiClient(object):
 
         return request_opener.open(request)
 
-    def append_detailed_data_about_pull_requests(self, pull_requests_data: List[dict]) -> List[dict]:
+    async def append_detailed_data_about_pull_requests(self, data_for_this_page: List[dict],
+                                                       pull_requests_data: List[dict]) -> None:
         detailed_pull_requests_data = []
 
+        loop = asyncio.get_event_loop()
+        futures = []
+        executor = ThreadPoolExecutor(max_workers=len(pull_requests_data))
+
         for pull_request_data in pull_requests_data:
-            pull_request_detail = self.get_detail_data_from_pull_request(pull_request_data)
-
-            pull_request_data_final = pull_request_data
-            pull_request_data_final['detail_info'] = pull_request_detail
-
-            detailed_pull_requests_data.append(pull_request_data_final)
-
+            futures.append(loop.run_in_executor(executor, self.add_detail_data_for_pull_request, pull_request_data,
+                                                detailed_pull_requests_data))
             break
 
-        return detailed_pull_requests_data
+        done, futures = await asyncio.wait(futures, loop=loop, return_when=asyncio.ALL_COMPLETED)
+
+        data_for_this_page = data_for_this_page + detailed_pull_requests_data
+
+    def add_detail_data_for_pull_request(self, pull_request_data: dict, detailed_pull_requests_data: List[dict]):
+        pull_request_detail = self.get_detail_data_from_pull_request(pull_request_data)
+
+        pull_request_data_final = pull_request_data
+        pull_request_data_final['detail_info'] = pull_request_detail
+
+        detailed_pull_requests_data.append(pull_request_data_final)
 
     def get_detail_data_from_pull_request(self, pull_request_data: dict) -> dict:
         response = self.make_request_to_github(pull_request_data['url'])
