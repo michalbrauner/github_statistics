@@ -1,0 +1,3 @@
+class GithubRequestErrorException(Exception):
+    pass
+
