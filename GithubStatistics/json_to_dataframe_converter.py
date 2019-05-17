@@ -16,6 +16,11 @@ class JsonToDataFrameConverter(object):
             'created_at': json_data['created_at'],
             'closed_at': json_data['closed_at'],
             'merged_at': json_data['merged_at'],
+            'additions': json_data['detail_info']['additions'],
+            'deletions': json_data['detail_info']['deletions'],
+            'changed_files': json_data['detail_info']['changed_files'],
+            'commits': json_data['detail_info']['commits'],
+            'comments': json_data['detail_info']['comments'],
         }
 
         return item
@@ -33,6 +38,11 @@ class JsonToDataFrameConverter(object):
             'created_at',
             'closed_at',
             'merged_at',
+            'additions',
+            'deletions',
+            'changed_files',
+            'commits',
+            'comments',
         ]
 
     @staticmethod
@@ -41,5 +51,8 @@ class JsonToDataFrameConverter(object):
         items = list(map(JsonToDataFrameConverter.create_dataframe_item_from_json_data, data))
 
         dataframe = pd.DataFrame(data=items, columns=columns)
+
+        index = pd.Index(dataframe['number'])
+        dataframe.set_index(index, drop=False, verify_integrity=True, inplace=True)
 
         return dataframe

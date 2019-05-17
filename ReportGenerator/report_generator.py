@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.plotly as py
 import plotly.tools
 
+from GithubStatistics.Charts.lines_of_code_in_pull_requests_chart_provider import LinesOfCodeInPullRequestsChartProvider
 from GithubStatistics.Charts.open_and_merged_pull_requests_chart_provider import OpenAndMergedPullRequestsChartProvider
 from GithubStatistics.github_statistics import GithubStatisticsProvider
 from ReportGenerator.github_statistics_to_html_printer import GithubStatisticsToHtmlPrinter
@@ -25,6 +26,10 @@ class ReportGenerator(object):
             ReportGenerator.create_merged_and_created_pull_requests_chart_url(github_statistics_provider.data)
         )
 
+        number_of_lines_in_pull_requests_in_time = GithubStatisticsToHtmlPrinter.print_chart(
+            ReportGenerator.create_number_of_lines_in_pull_requests_chart_url(github_statistics_provider.data)
+        )
+
         return '''
 <html>
     <head>
@@ -32,8 +37,8 @@ class ReportGenerator(object):
         <style>body{ margin:0 100; background:whitesmoke; }</style>
     </head>
     <body>
-        <h1>Pull requests statistics</h1>     
         ''' + merged_pull_requests_in_time + '''
+        ''' + number_of_lines_in_pull_requests_in_time + '''
         <hr />
         <div class="row"><div class="col-xs-12 col-sm-12"><em>''' + generated_at_string + '''</em></div></div>
         <br /><br />
@@ -47,3 +52,10 @@ class ReportGenerator(object):
         chart = chart_provider.get_chart('Created and merged pull requests')
 
         return py.plot(chart, filename='merged_pull_requests_in_time_chart', auto_open=False)
+
+    @staticmethod
+    def create_number_of_lines_in_pull_requests_chart_url(data: pd.DataFrame):
+        chart_provider = LinesOfCodeInPullRequestsChartProvider(data)
+        chart = chart_provider.get_chart('Average number of lines in pull requests / month')
+
+        return py.plot(chart, filename='average_number_of_lines_in_pull_requests_in_time_chart', auto_open=False)

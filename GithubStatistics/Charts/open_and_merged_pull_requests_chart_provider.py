@@ -36,7 +36,11 @@ class OpenAndMergedPullRequestsChartProvider(ChartProvider):
 
         layout = go.Layout(
             xaxis=dict(
-                title='Date'
+                title='Month',
+                tickformat='%B %Y',
+                tick0=number_of_pull_requests_by_merged_at.index[0],
+                dtick='M6',
+                tickangle=-45
             ),
             yaxis=go.layout.YAxis(
                 title='Number of pull requests'
