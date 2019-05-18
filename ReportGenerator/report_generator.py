@@ -10,18 +10,28 @@ from GithubStatistics.Charts.size_of_pull_requests_by_people_chart_provider impo
 from GithubStatistics.github_statistics import GithubStatisticsProvider
 from ReportGenerator.github_statistics_to_html_printer import GithubStatisticsToHtmlPrinter
 
-plotly.tools.set_credentials_file(username='michalbrauner', api_key='nueZsBmz2b8joHTjTr9x')
-
 
 class ReportGenerator(object):
-    @staticmethod
-    def generate(github_statistics_provider: GithubStatisticsProvider, output_file: str) -> None:
+    def __init__(self, plotly_username: str, plotly_api_key: str):
+        self._plotly_username = plotly_username
+        self._plotly_api_key = plotly_api_key
+
+    @property
+    def plotly_username(self) -> str:
+        return self._plotly_username
+
+    @property
+    def plotly_api_key(self) -> str:
+        return self._plotly_api_key
+
+    def generate(self, github_statistics_provider: GithubStatisticsProvider, output_file: str, repository: str) -> None:
+        plotly.tools.set_credentials_file(username=self.plotly_username, api_key=self.plotly_api_key)
+
         file_opened = open(output_file, 'w')
-        file_opened.write(ReportGenerator.get_html_string(github_statistics_provider))
+        file_opened.write(self.get_html_string(github_statistics_provider, repository))
         file_opened.close()
 
-    @staticmethod
-    def get_html_string(github_statistics_provider: GithubStatisticsProvider) -> str:
+    def get_html_string(self, github_statistics_provider: GithubStatisticsProvider, repository: str) -> str:
         generated_at_string = 'Generated at {}'.format(datetime.datetime.now())
 
         merged_pull_requests_in_time = GithubStatisticsToHtmlPrinter.print_chart(
@@ -43,7 +53,8 @@ class ReportGenerator(object):
         <style>body{ margin:0 100; background:whitesmoke; }</style>
     </head>
     <body>
-        <h1>Statistics from Github (repository platform-backend)</h1>
+        <h1>Statistics from Github</h1>
+        <h3>Repository: ''' + repository + '''</h3>
         ''' + merged_pull_requests_in_time + '''
         ''' + number_of_lines_in_pull_requests_in_time + '''
         ''' + size_of_pull_requests_by_people_in_time + '''

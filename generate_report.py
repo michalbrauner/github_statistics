@@ -10,6 +10,9 @@ def get_argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument('-o', '--output', type=str, required=True)
     parser.add_argument('-d', '--data-in-json', type=str, required=True, nargs='+')
+    parser.add_argument('-r', '--repository', type=str, required=True)
+    parser.add_argument('-u', '--plotly-username', type=str, required=True)
+    parser.add_argument('-a', '--plotly-api-key', type=str, required=True)
 
     return parser
 
@@ -27,8 +30,8 @@ def main() -> None:
     pull_requests_as_dataframe = JsonToDataFrameConverter.get_dataframe(pull_requests)
     github_statistics = GithubStatisticsProvider(pull_requests_as_dataframe)
 
-    report_generator = ReportGenerator()
-    report_generator.generate(github_statistics, arguments.output)
+    report_generator = ReportGenerator(arguments.plotly_username, arguments.plotly_api_key)
+    report_generator.generate(github_statistics, arguments.output, arguments.repository)
 
     print('Report saved.')
 

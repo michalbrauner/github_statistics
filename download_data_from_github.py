@@ -21,7 +21,7 @@ def main() -> None:
     arguments = argument_parser.parse_args()
 
     client = GithubApiClient(arguments.github_username, arguments.github_token)
-    pull_requests = client.get_pull_requests(arguments.page_start, arguments.page_end)
+    pull_requests = client.get_pull_requests(arguments.repository, arguments.page_start, arguments.page_end)
 
     with open(arguments.output, 'w') as output_file:
         json.dump(pull_requests, output_file)

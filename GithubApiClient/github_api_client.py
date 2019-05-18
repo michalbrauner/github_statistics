@@ -32,10 +32,10 @@ class GithubApiClient(object):
     def token(self):
         return self._token
 
-    def get_pull_requests(self, page_start: int, page_end: int) -> List[dict]:
+    def get_pull_requests(self, repository: str, page_start: int, page_end: int) -> List[dict]:
         data_all = []
 
-        url = '{}/repos/BrandEmbassy/platform-backend/pulls?state=all&page={}'.format(self.API_URL, page_start)
+        url = '{}/repos/{}/pulls?state=all&page={}'.format(self.API_URL, repository, page_start)
 
         current_page = page_start
 
