@@ -8,6 +8,7 @@ class JsonToDataFrameConverter(object):
         item = {
             'url': json_data['url'],
             'id': json_data['id'],
+            'author': json_data['id'],
             'number': json_data['number'],
             'state': json_data['state'],
             'title': json_data['title'],
@@ -21,6 +22,8 @@ class JsonToDataFrameConverter(object):
             'changed_files': json_data['detail_info']['changed_files'],
             'commits': json_data['detail_info']['commits'],
             'comments': json_data['detail_info']['comments'],
+            'author_id': json_data['user']['id'],
+            'author_login': json_data['user']['login'],
         }
 
         return item
@@ -43,6 +46,8 @@ class JsonToDataFrameConverter(object):
             'changed_files',
             'commits',
             'comments',
+            'author_id',
+            'author_login',
         ]
 
     @staticmethod

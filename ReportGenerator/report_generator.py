@@ -5,6 +5,8 @@ import plotly.tools
 
 from GithubStatistics.Charts.lines_of_code_in_pull_requests_chart_provider import LinesOfCodeInPullRequestsChartProvider
 from GithubStatistics.Charts.open_and_merged_pull_requests_chart_provider import OpenAndMergedPullRequestsChartProvider
+from GithubStatistics.Charts.size_of_pull_requests_by_people_chart_provider import \
+    SizeOfPullRequestsByPeopleChartProvider
 from GithubStatistics.github_statistics import GithubStatisticsProvider
 from ReportGenerator.github_statistics_to_html_printer import GithubStatisticsToHtmlPrinter
 
@@ -30,6 +32,10 @@ class ReportGenerator(object):
             ReportGenerator.create_number_of_lines_in_pull_requests_chart_url(github_statistics_provider.data)
         )
 
+        size_of_pull_requests_by_people_in_time = GithubStatisticsToHtmlPrinter.print_chart(
+            ReportGenerator.create_size_of_pull_requests_by_people_chart_url(github_statistics_provider.data)
+        )
+
         return '''
 <html>
     <head>
@@ -37,8 +43,10 @@ class ReportGenerator(object):
         <style>body{ margin:0 100; background:whitesmoke; }</style>
     </head>
     <body>
+        <h1>Statistics from Github (repository platform-backend)</h1>
         ''' + merged_pull_requests_in_time + '''
         ''' + number_of_lines_in_pull_requests_in_time + '''
+        ''' + size_of_pull_requests_by_people_in_time + '''
         <hr />
         <div class="row"><div class="col-xs-12 col-sm-12"><em>''' + generated_at_string + '''</em></div></div>
         <br /><br />
@@ -59,3 +67,11 @@ class ReportGenerator(object):
         chart = chart_provider.get_chart('Average number of lines in pull requests / month')
 
         return py.plot(chart, filename='average_number_of_lines_in_pull_requests_in_time_chart', auto_open=False)
+
+    @staticmethod
+    def create_size_of_pull_requests_by_people_chart_url(data: pd.DataFrame):
+        chart_provider = SizeOfPullRequestsByPeopleChartProvider(data)
+        chart = chart_provider.get_chart(
+            'Average size of pull requests / month (last 240 days)')
+
+        return py.plot(chart, filename='average_size_of_pull_requests_by_people_time_chart', auto_open=False)
